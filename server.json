@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ru.rossbus/rossbus-mcp",
   "title": "rossbus — buses across Russia",
-  "description": "Intercity bus travel across Russia: routes, partner prices, departure times, stations, transfers, road distances and a price-per-km index. Real data only.",
+  "description": "Buses across Russia: routes, prices, departure times, stations, transfers, price-per-km index",
   "version": "1.1.0",
   "websiteUrl": "https://rossbus.ru/agents/",
   "repository": {
@@ -11,6 +11,9 @@
     "id": "1353971439"
   },
   "remotes": [
-    { "type": "streamable-http", "url": "https://rossbus.ru/mcp" }
+    {
+      "type": "streamable-http",
+      "url": "https://rossbus.ru/mcp"
+    }
   ]
 }
