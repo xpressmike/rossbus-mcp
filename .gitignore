@@ -1,0 +1,5 @@
+node_modules/
+data/mcp-data.json
+data/mcp-calls.jsonl
+.env
+key.pem
