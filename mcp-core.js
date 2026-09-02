@@ -10,6 +10,7 @@ const AFF = JSON.parse(readFileSync(path.join(ROOT, 'data/affiliates.json'), 'ut
 const SLUG_MAP = JSON.parse(readFileSync(path.join(ROOT, 'data/unitiki_slug_map.json'), 'utf8'));
 
 const UNITIKI = AFF.providers.find((p) => p.id === 'unitiki');
+const DIST_PAGES = new Set(DATA.distPages ?? []);
 
 // ── города: поиск по слагу или русскому имени ────────────────────────────
 const BY_RU = new Map();
@@ -110,9 +111,12 @@ export function getDistance(fromQ, toQ) {
   if (!from || !to) return { error: `Город не найден: ${!from ? fromQ : toQ}` };
   const rd = DATA.roads[`${from}__${to}`] ?? DATA.roads[`${to}__${from}`];
   if (!rd?.km) return { error: 'Дороги между этими городами в данных нет.' };
+  // страница расстояния есть не у каждой пары — ссылку даём только на существующую
+  const page = DIST_PAGES.has(`${from}__${to}`) ? `https://rossbus.ru/rasstoyanie/${from}/${to}/`
+    : DIST_PAGES.has(`${to}__${from}`) ? `https://rossbus.ru/rasstoyanie/${to}/${from}/`
+    : DATA.routes[`${from}__${to}`] ? `https://rossbus.ru/buses/${from}/${to}/` : null;
   return { from: cityRu(from), to: cityRu(to), road_km: rd.km,
-           drive_minutes: rd.drive_min, has_direct_bus: !!DATA.routes[`${from}__${to}`],
-           page: `https://rossbus.ru/rasstoyanie/${from}/${to}/` };
+           drive_minutes: rd.drive_min, has_direct_bus: !!DATA.routes[`${from}__${to}`], page };
 }
 
 export function findTransfer(fromQ, toQ) {

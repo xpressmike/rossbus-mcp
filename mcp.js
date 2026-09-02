@@ -36,7 +36,7 @@ const INSTRUCTIONS = `Справочник автобусного сообщен
 Bus routes, schedules and prices across Russia; ask in Russian city names or slugs. All data is real partner data, nothing is estimated.`;
 
 function build() {
-  const s = new McpServer({ name: 'rossbus', version: '1.2.0' }, { instructions: INSTRUCTIONS });
+  const s = new McpServer({ name: 'rossbus', version: '1.2.1' }, { instructions: INSTRUCTIONS });
   // каждый вызов инструмента — в лог спроса
   const reg = s.registerTool.bind(s);
   s.registerTool = (name, def, handler) => reg(name, def, async (args) => { logCall(name, args); return handler(args); });
