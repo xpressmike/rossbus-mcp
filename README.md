@@ -41,6 +41,16 @@ Claude / ChatGPT: *Settings → Connectors → Add custom connector* → URL abo
 
 Cities are accepted in Russian («Казань») or as slugs (`kazan`).
 
+### MCP Apps (interactive UI)
+
+`get_route`, `city_departures` and `cheapest_destinations` ship an
+[MCP Apps](https://github.com/modelcontextprotocol/ext-apps) view
+(`ui://rossbus/app.html`): in hosts that support the extension (Claude,
+ChatGPT, VS Code, Goose) the route card, departure board or budget list
+renders inline in the chat — rows are clickable and open the route, the buy
+button opens the partner page. Text-only hosts get the same data as text.
+The view is a single self-contained HTML built with Vite (`ui/`).
+
 ### Example
 
 ```bash

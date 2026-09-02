@@ -3,7 +3,7 @@
   "name": "ru.rossbus/rossbus-mcp",
   "title": "rossbus — buses across Russia",
   "description": "Buses across Russia: routes, prices, departure times, stations, transfers, price-per-km index",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "websiteUrl": "https://rossbus.ru/agents/",
   "repository": {
     "url": "https://github.com/xpressmike/rossbus-mcp",

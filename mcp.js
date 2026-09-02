@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { registerAppTool, registerAppResource, RESOURCE_MIME_TYPE } from '@modelcontextprotocol/ext-apps/server';
+import { readFileSync } from 'node:fs';
 import * as core from './mcp-core.js';
 
 const PORT = Number(process.env.MCP_PORT || 3012);
@@ -19,6 +21,14 @@ function logCall(tool, args) {
   appendFile(LOG_PATH, JSON.stringify({ ts: Math.floor(Date.now() / 1000), tool, args }) + '\n', () => {});
 }
 
+// MCP Apps: один самодостаточный HTML (ui/dist, сборка `npm run build:ui`)
+// рисует карточку маршрута, табло и «куда дёшево» прямо в чате хоста.
+// Хосты без UI получают тот же текстовый ответ — виджет только надстройка.
+const UI_URI = 'ui://rossbus/app.html';
+let UI_HTML = null;
+try { UI_HTML = readFileSync(new URL('../ui/dist/mcp-app.html', import.meta.url), 'utf8'); }
+catch { console.warn('MCP Apps: ui/dist/mcp-app.html не собран — инструменты работают без виджета'); }
+
 const INSTRUCTIONS = `Справочник автобусного сообщения России (rossbus.ru): 1000+ городов, 4500+ маршрутов.
 Все данные реальные — снимок продаж партнёра, расписания, дороги OSRM; ничего не оценивается и не выдумывается.
 Если маршрута нет в данных, его скорее всего не существует — используйте find_transfer для пересадок.
@@ -26,18 +36,24 @@ const INSTRUCTIONS = `Справочник автобусного сообщен
 Bus routes, schedules and prices across Russia; ask in Russian city names or slugs. All data is real partner data, nothing is estimated.`;
 
 function build() {
-  const s = new McpServer({ name: 'rossbus', version: '1.1.0' }, { instructions: INSTRUCTIONS });
+  const s = new McpServer({ name: 'rossbus', version: '1.2.0' }, { instructions: INSTRUCTIONS });
   // каждый вызов инструмента — в лог спроса
   const reg = s.registerTool.bind(s);
   s.registerTool = (name, def, handler) => reg(name, def, async (args) => { logCall(name, args); return handler(args); });
   const json = (v) => ({ content: [{ type: 'text', text: JSON.stringify(v, null, 1) }] });
+  // ответ с UI: текст для модели + structuredContent для виджета
+  const rich = (kind, v) => ({ ...json(v), structuredContent: { kind, ...v } });
+  const ui = UI_HTML ? { _meta: { ui: { resourceUri: UI_URI } } } : {};
+  const appTool = (name, cfg, handler) => UI_HTML ? registerAppTool(s, name, { ...cfg, ...ui }, handler) : s.registerTool(name, cfg, handler);
+  if (UI_HTML) registerAppResource(s, 'rossbus UI', UI_URI, { mimeType: RESOURCE_MIME_TYPE },
+    async () => ({ contents: [{ uri: UI_URI, mimeType: RESOURCE_MIME_TYPE, text: UI_HTML }] }));
   const city = z.string().describe('Город: русское название («Москва») или слаг (moskva)');
 
-  s.registerTool('get_route', {
+  appTool('get_route', {
     title: 'Маршрут между городами',
     description: 'Цены, число рейсов в продаже, времена отправления, станции, перевозчики и ссылка на покупку у партнёра. Только реальные данные; если прямых рейсов нет — предложит пересадку.',
     inputSchema: { from: city, to: city, date: z.string().optional().describe('YYYY-MM-DD; прошедшая или пустая → завтра') },
-  }, async ({ from, to, date }) => json(core.getRoute(from, to, date)));
+  }, async ({ from, to, date }) => rich('route', core.getRoute(from, to, date)));
 
   s.registerTool('search_routes', {
     title: 'Куда можно уехать из города',
@@ -45,11 +61,11 @@ function build() {
     inputSchema: { from: city, limit: z.number().int().min(1).max(50).optional() },
   }, async ({ from, limit }) => json(core.searchRoutes(from, limit ?? 15)));
 
-  s.registerTool('city_departures', {
+  appTool('city_departures', {
     title: 'Табло отправлений города',
     description: 'Первое/последнее отправление и число рейсов по каждому направлению (по расписанию партнёра).',
     inputSchema: { city, limit: z.number().int().min(1).max(60).optional() },
-  }, async (a) => json(core.cityDepartures(a.city, a.limit ?? 20)));
+  }, async (a) => rich('board', core.cityDepartures(a.city, a.limit ?? 20)));
 
   s.registerTool('get_station', {
     title: 'Автовокзалы города',
@@ -69,12 +85,12 @@ function build() {
     inputSchema: { from: city, to: city },
   }, async ({ from, to }) => json(core.findTransfer(from, to)));
 
-  s.registerTool('cheapest_destinations', {
+  appTool('cheapest_destinations', {
     title: 'Куда уехать дёшево',
     description: 'Направления из города по возрастанию цены билета, при желании — в пределах бюджета («куда уехать из Казани до 1000 ₽»). С ценой километра каждого варианта.',
     inputSchema: { from: city, max_price_rub: z.number().int().positive().optional().describe('Бюджет в рублях'),
                    limit: z.number().int().min(1).max(50).optional() },
-  }, async ({ from, max_price_rub, limit }) => json(core.cheapestDestinations(from, max_price_rub, limit ?? 15)));
+  }, async ({ from, max_price_rub, limit }) => rich('cheapest', core.cheapestDestinations(from, max_price_rub, limit ?? 15)));
 
   s.registerTool('price_per_km_stats', {
     title: 'Индекс цены километра',

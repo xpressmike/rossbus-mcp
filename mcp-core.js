@@ -89,11 +89,11 @@ export function cityDepartures(cityQ, limit = 20) {
   for (const [key, r] of Object.entries(DATA.routes)) {
     if (!key.startsWith(from + '__') || !r.times.length) continue;
     const to = key.slice(from.length + 2);
-    deps.push({ to: cityRu(to), first: r.times[0], last: r.times[r.times.length - 1],
+    deps.push({ to: cityRu(to), to_slug: to, first: r.times[0], last: r.times[r.times.length - 1],
                 departures: r.times.length, schedule_date: r.date, min_rub: r.min });
   }
   deps.sort((a, b) => a.first.localeCompare(b.first));
-  return { city: cityRu(from), directions: deps.length, board: deps.slice(0, limit) };
+  return { city: cityRu(from), city_slug: from, directions: deps.length, board: deps.slice(0, limit) };
 }
 
 export function getStation(cityQ) {
@@ -177,7 +177,7 @@ export function cheapestDestinations(fromQ, maxPriceRub, limit = 15) {
                page: `https://rossbus.ru/buses/${from}/${to}/` });
   }
   out.sort((a, b) => a.min_rub - b.min_rub);
-  return { from: cityRu(from), budget_rub: maxPriceRub ?? null, found: out.length,
+  return { from: cityRu(from), from_slug: from, budget_rub: maxPriceRub ?? null, found: out.length,
            destinations: out.slice(0, limit), page: `https://rossbus.ru/buses/${from}/` };
 }
 

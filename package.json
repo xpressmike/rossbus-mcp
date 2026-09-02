@@ -1,6 +1,6 @@
 {
   "name": "rossbus-mcp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "MCP server for intercity bus travel across Russia: routes, prices, schedules, transfers, price-per-km index. Remote server at https://rossbus.ru/mcp",
   "type": "module",
   "main": "mcp.js",
