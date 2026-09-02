@@ -5,7 +5,8 @@
   "type": "module",
   "main": "mcp.js",
   "scripts": {
-    "start": "node mcp.js"
+    "start": "node mcp.js",
+    "build:ui": "vite build --config ui/vite.config.mjs"
   },
   "repository": {
     "type": "git",
@@ -25,9 +26,14 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "zod": "^3.25.0"
+    "zod": "^3.25.0",
+    "@modelcontextprotocol/ext-apps": "^1.7.5"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2",
+    "vite-plugin-singlefile": "^2.3.0"
   }
 }
