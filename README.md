@@ -79,8 +79,10 @@ dates default to tomorrow.
 
 The server is a thin wrapper (`mcp.js` transport, `mcp-core.js` pure
 functions) over `data/mcp-data.json`, a compact snapshot produced weekly by
-the site pipeline. See `data/README.md`. `npm i && npm start` listens on
-`127.0.0.1:3012`; put nginx in front for TLS.
+the site pipeline. See `data/README.md`. `npm i && npm start` runs it on your own machine, on localhost port 3012
+(`MCP_PORT` to change it); put a reverse proxy in front for TLS.
+The public instance is `https://rossbus.ru/mcp` — use that one unless you
+want your own copy.
 
 ## Also for agents
 
